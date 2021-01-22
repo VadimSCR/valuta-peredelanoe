@@ -1,0 +1,217 @@
+#include "pch.h"
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <tchar.h>
+
+using namespace std;
+
+class Currency
+{
+protected:
+	float rate;
+	float amount;
+	float amount_rub;
+public:
+	virtual int fb() = 0;             //нулевая виртуальная функция
+	void ConvertInRub()              //метод перевода вводимой валюты в рубли
+	{
+		amount_rub = amount * rate;//Сумма в рублях
+	}
+	void Out()                   //метод вывода на экран в выбранной валюте и в рублях
+	{
+		cout << "Сумма = " << amount << endl;
+	}
+	void Input_amount()
+	{
+		cout << "Введите сумму " << endl;
+		cin >> amount;
+	}
+	float GetAmount()
+	{
+		return amount;
+	}
+	float GetAmountInRubles()
+	{
+		return amount_rub;
+	}
+};
+class Dollar : public Currency
+{
+	float cent;
+public:
+	Dollar() { rate = 73.355; }  //инициализируем курс валюты класса-родителя согласно курсу доллара в рублях
+	void ConvertInCent()
+	{
+		cent = amount * 100;
+	}
+	virtual int fb() { return 0; }
+};
+class Euro : public Currency
+{
+	float cent;
+public:
+	Euro() { rate = 89.1483; } //инициализируем курс валюты класса-родителя согласно курсу доллара в рублях
+	void ConvertInCent()
+	{
+		cent = amount * 100;
+	}
+	virtual int fb() { return 0; }
+};
+class Pound : public Currency
+{
+	float pens;
+public:
+	Pound() { rate = 100.2836; } //инициализируем курс валюты класса-родителя согласно курсу доллара в рублях
+	void ConvertInPens()
+	{
+		pens = amount * 100;
+	}
+	virtual int fb() { return 0; }
+};
+class Purse
+{
+	float TotalAmountInRubles;
+	float TotalAmount;
+	int n; //количество отсеков в кошельке для каждой валюты
+	Dollar* dol;
+	Euro* euro;
+	Pound* pound;
+public:
+	Purse(int _n)
+	{
+		n = _n;
+		dol = new Dollar[n];
+		euro = 0; pound = 0;
+		TotalAmountInRubles = 0;
+		TotalAmount = 0;
+	}//массив долларов 
+	Purse(int _n, char c)
+	{
+		n = _n;
+		euro = new Euro[n];
+		dol = 0; pound = 0;
+		TotalAmountInRubles = 0;
+		TotalAmount = 0;
+	}//  массив евро
+	Purse(int _n, char c, char d)
+	{
+		n = _n;
+		pound = new Pound[n];
+		dol = 0; euro = 0;
+		TotalAmountInRubles = 0;
+		TotalAmount = 0;
+	}// массив фунтов стерлингов 
+	~Purse()
+	{
+		if (dol != 0) delete[] dol;
+		if (euro != 0) delete[] euro;
+		if (pound != 0) delete[] pound;
+	}
+	float GetTotalAmountInRubles()//метод подсчета итоговой суммы в рублях
+	{
+		for (int i = 0; i < n; i++)
+		{
+			if (dol != 0)
+				TotalAmountInRubles += dol[i].GetAmountInRubles();
+			if (euro != 0)
+				TotalAmountInRubles += euro[i].GetAmountInRubles();
+			if (pound != 0)
+				TotalAmountInRubles += pound[i].GetAmountInRubles();
+		}
+		return TotalAmountInRubles;
+	}
+	float GetTotalAmount()//метод подсчета итоговой суммы в выбранной валюте
+	{
+		for (int i = 0; i < n; i++)
+		{
+			if (dol != 0)
+				TotalAmount += dol[i].GetAmount();
+			if (euro != 0)
+				TotalAmount += euro[i].GetAmount();
+			if (pound != 0)
+				TotalAmount += pound[i].GetAmount();
+		}
+		return TotalAmount;
+	}
+	void add()//метод ввода в кошелек для каждой из валют
+	{
+		cout << "Введите " << n << " кошелька(кошельков)" << endl;
+		for (int i = 0; i < n; i++)
+		{
+			if (dol != 0)
+			{
+				dol[i].Input_amount();
+				dol[i].ConvertInRub();
+				dol[i].ConvertInCent();
+			}
+			if (euro != 0)
+			{
+				euro[i].Input_amount();
+				euro[i].ConvertInRub();
+				euro[i].ConvertInCent();
+			}
+
+			if (pound != 0)
+			{
+				pound[i].Input_amount();
+				pound[i].ConvertInRub();
+				pound[i].ConvertInPens();
+			}
+
+		}
+	}
+	void output()
+	{
+		cout << "Сумма = " << GetTotalAmount() << endl;
+		cout << "Сумма в рублях = " << GetTotalAmountInRubles() << endl;
+	}
+};
+
+int _tmain(int argc, _TCHAR* argv[])
+{
+	setlocale(LC_ALL, "Russian");
+	int n;
+	cout << "Укажите количество кошельков для доллара: " << endl;
+	cin >> n;
+	Purse d(n);
+	d.add();
+	d.output();
+	cout << "Укажите количество кошельков для евро: " << endl;
+	cin >> n;
+	Purse e(n, 's');
+	e.add();
+	e.output();
+	cout << "Укажите количество кошельков для фунтов стерлинга: " << endl;
+	cin >> n;
+	Purse p(n, 's', 's1');
+	p.add();
+	p.output();
+	cout << "*" << endl;
+}
+
+int _tmain(int argc, _TCHAR* argv[])
+
+{
+	std::fstream fs("kurs.txt", std::ios::in); //открываю текстовой файл для чтения 
+	if (fs.is_open()) //если файл открыт, читаю строки
+	{
+		const int maxStringLengh = 4096; //максимальная длинна строки 
+		int numStringsToSkip = 1; //кол-во пропускамых строк перед чтением
+
+		for (int i = 0; i < numStringsToSkip; i++) // пропускаю не нужные строки (читаю и ничего с ними не делаю)
+		{
+			char* tmp = new char[maxStringLengh];
+			fs.getline(tmp, maxStringLengh);
+			delete[] tmp;
+		}
+
+		char* desiredString = new char[maxStringLengh];
+		fs.getline(desiredString, maxStringLengh); //читаю строку, которую необходимо
+		                //тут надо записать ее в курс доллара
+		delete[] desiredString; // удаляю строку по окончании работы с ней   
+		fs.close(); //закрыаю файловый поток
+	}
+	system("pause");
+	return 0
+}
